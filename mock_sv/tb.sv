@@ -19,19 +19,9 @@ module TB_blk;
         $dumpvars(1);
         clk = 1;
         rst_n = 1;
-        wait_clk;
-        wait_clk;
-        wait_clk;
-        wait_clk;
-        wait_clk;
-        wait_clk;
-        wait_clk;
-        wait_clk;
-        wait_clk;
-        wait_clk;
-        wait_clk;
-        wait_clk;
-        wait_clk;
+        for i in 0 to 15 loop
+            wait_clk;
+        end loop;
     end
 
     function display;

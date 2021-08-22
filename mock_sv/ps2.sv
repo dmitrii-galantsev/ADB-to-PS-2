@@ -1,5 +1,3 @@
-// Design
-// D flip-flop
 module ps2_master (
     input        clk,
     input        rst_n,
@@ -56,7 +54,7 @@ module ps2_master (
         end
     end
 
-    // clock
+  // clock div by 2
   always @(posedge clk, negedge clk)
     begin
         if (transmitting)
@@ -72,4 +70,3 @@ module ps2_master (
     end
 
 endmodule
-

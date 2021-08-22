@@ -1,0 +1,5 @@
+# VHDL Products
+*.cf
+
+# Misc
+tags

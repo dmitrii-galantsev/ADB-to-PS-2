@@ -1,0 +1,3 @@
+[submodule "cute_lib"]
+	path = include/cute_lib
+	url = git@github.com:dmitrii-galantsev/cute_lib.git
