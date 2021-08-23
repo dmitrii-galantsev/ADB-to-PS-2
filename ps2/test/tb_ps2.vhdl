@@ -43,7 +43,7 @@ begin
   (
     clk      => clk,
     rst_n    => rst_n,
-    tdata    => "00000000",
+    tdata    => "01100110",
     tvalid   => tvalid,
     tready   => tready,
     ps2_clk  => ps2_clk,
