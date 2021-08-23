@@ -1,34 +1,34 @@
 GHDL = ghdl
 LIBS = ../include/cute_lib
 LIBFLAGS = -P$(LIBS)
-GHDLFLAGS = --std=08 $(LIBFLAGS)
-GHDLRUNFLAGS =
+GHDLFLAGS = --std=08 -fsynopsys $(LIBFLAGS)
+GHDLRUNFLAGS = --vcd=dump.vcd
+VHDLFILES = $(wildcard *.vhdl)
+VHDLFILES += $(wildcard test/*.vhdl)
 
 include $(LIBS)/color.mk
 
-all: elab
+all: run
 
 libs: $(LIBS)
 $(LIBS):
-	$(MAKE) -C $@
+	$(MAKE) -C $@ libs
 
 # Targets to analyze libraries
-init: libs
-	$(GHDL) -a $(GHDLFLAGS) ps2.vhdl
-	$(GHDL) -a $(GHDLFLAGS) tb_ps2.vhdl
-
-# Elaborate target.  Almost useless
-elab: init
-	$(GHDL) -c $(GHDLFLAGS) -e ps2_master
-	$(GHDL) -c $(GHDLFLAGS) -e testbench
+init: libs $(VHDLFILES)
+	$(call print_green,"Compiling [$(VHDLFILES)] into [work]...")
+	$(GHDL) -a $(GHDLFLAGS) $(VHDLFILES)
+	$(call print_green_bld,"Compiling [$(VHDLFILES)] into [work] [DONE]")
 
 # Run target
 run: init
-	#$(GHDL) -c $(GHDLFLAGS) -r ps2_master $(GHDLRUNFLAGS)
+	$(call print_green,"Running testbench...")
 	$(GHDL) -c $(GHDLFLAGS) -r testbench $(GHDLRUNFLAGS)
+	$(call print_green_bld,"Running testbench [DONE]")
 
 clean:
 	$(GHDL) clean
-	find ../ -iname "*.cf" -delete
+	find ./ -iname "*.cf" -delete
+	$(MAKE) -C $(LIBS) clean
 
-.PHONY: clean all init elab run libs $(LIBS)
+.PHONY: all clean init run libs $(LIBS)

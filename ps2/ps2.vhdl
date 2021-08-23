@@ -5,75 +5,73 @@ use cute_lib.cute_pkg.all;
 
 entity ps2_master is
   port (
-  clk     : in  sl;
-  rst_n   : in  sl;
-  tdata   : in  slv8;
-  tvalid  : in  sl;
-  tready  : out sl := '0';
-  ps2_clk : out sl := '0';
-  ps2_data : out sl := '0'
+  clk      : in  sl;
+  rst_n    : in  sl;
+  tdata    : in  slv8;
+  tvalid   : in  sl;
+  tready   : out sl := '0';
+  ps2_clk  : out sl := '0';
+  ps2_data : out sl := '1'
 );
 end ps2_master;
 
 architecture behavior of ps2_master is
+  type state_t is (WAITING, TRANSMITTING, DONE);
+  signal state : state_t := WAITING;
   constant my_data_k : slv8 := "00011111";
   signal tdata_latch : slv8 := (others => '0');
-  signal done : sl := '0';
+
+  pure function get_parity (constant data : slv8)
+    return sl
+  is begin
+    return xor data;
+  end function;
 begin
 
-  main : process(clk)
-  is
-  begin
-    if rising_edge(clk) then
-      if (rst_n = '0') or (done = '1') then
-        tready <= '0';
-      else
-        tready <= '1';
-      end if;
-    end if;
-  end process;
-
-  data_driver : process(clk)
-  begin
-    if rising_edge(clk) then
-      if rst_n = '0' then
-        ps2_data <= '0';
-        tdata_latch <= my_data_k;
-      else
-        if (ps2_clk = '1') and (tready = '1') then
-          ps2_data <= tdata_latch(7);
-          tdata_latch <= tdata_latch(6 downto 0) & '0';
-        end if;
-      end if;
-    end if;
-  end process;
-
-  clk_driver : process(clk)
-  begin
-    if rising_edge(clk) then
-      if rst_n = '0' then
-        ps2_clk <= '0';
-      else
-        -- div by 2
-        ps2_clk <= not ps2_clk;
-      end if;
-    end if;
-  end process;
-
-  logger : process(clk)
+  main: process(clk)
   is
     variable counter : integer := 0;
   begin
     if rising_edge(clk) then
       if rst_n = '0' then
-        counter := 0;
-        done <= '0';
-      elsif rising_edge(ps2_clk) then
-        info(to_string(counter));
-        counter := counter + 1;
-        if counter >= 7 then
-          done <= '1';
-        end if;
+        tready <= '0';
+        ps2_clk <= '0';
+        ps2_data <= '0';
+        state <= WAITING;
+        tdata_latch <= (others => '0');
+        counter     := 0;
+      else
+        case state is
+          when WAITING =>
+            tready <= '1';
+            if tvalid = '1' then
+              state <= TRANSMITTING;
+              tdata_latch <= tdata;
+            end if;
+          when TRANSMITTING =>
+            tready <= '0';
+            ps2_clk <= not ps2_clk;
+            -- data like changes when clk is high and valid when low
+            if ps2_clk = '0' then
+              if counter = 0 then
+                -- start bit
+                ps2_data <= '0';
+              elsif (counter >= 1) and (counter < 9) then
+                -- data bit
+                ps2_data <= tdata_latch(0);
+                tdata_latch <= '0' & tdata_latch(7 downto 1);
+              else
+                -- parity bit
+                ps2_data <= get_parity(my_data_k);
+                state <= DONE;
+              end if;
+              counter := counter + 1;
+            end if;
+          when DONE =>
+            ps2_clk <= '0';
+            ps2_data <= '1';
+            state <= DONE;
+        end case;
       end if;
     end if;
   end process;
