@@ -61,9 +61,11 @@ begin
                 -- data bit
                 ps2_data <= tdata_latch(0);
                 tdata_latch <= '0' & tdata_latch(7 downto 1);
-              else
+              elsif (counter = 9) then
                 -- parity bit
                 ps2_data <= parity;
+              else
+                ps2_data <= '1';
                 state <= DONE;
               end if;
               counter := counter + 1;

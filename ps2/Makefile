@@ -1,8 +1,8 @@
 GHDL = ghdl
 LIBS = ../include/cute_lib
 LIBFLAGS = -P$(LIBS)
-GHDLFLAGS = --std=08 -fsynopsys $(LIBFLAGS)
-GHDLRUNFLAGS = --vcd=dump.vcd
+GHDLFLAGS = --std=08 -fsynopsys -frelaxed $(LIBFLAGS)
+GHDLRUNFLAGS = --vcd=dump.vcd --assert-level=note --stop-time=1ms
 VHDLFILES = $(wildcard *.vhdl)
 VHDLFILES += $(wildcard test/*.vhdl)
 
@@ -23,7 +23,7 @@ init: libs $(VHDLFILES)
 # Run target
 run: init
 	$(call print_green,"Running testbench...")
-	$(GHDL) -c $(GHDLFLAGS) -r testbench $(GHDLRUNFLAGS)
+	$(GHDL) -c $(GHDLFLAGS) -r testbench $(GHDLRUNFLAGS) || true
 	$(call print_green_bld,"Running testbench [DONE]")
 
 clean:

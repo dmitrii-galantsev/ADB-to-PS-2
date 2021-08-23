@@ -29,9 +29,13 @@ architecture tb of testbench is
   signal ps2_data : sl;
   signal tready : sl;
 
+  constant tdata_k : slv8 := "11001111";
+  shared variable tb_bit : integer := 0;
+
   procedure print_wait
   is begin
-    info("ready: " & to_string(tready) & HT &
+    info("[" & to_string(tb_bit) & "]" & HT &
+         "ready:  " & to_string(tready) & HT &
          "data:  " & to_string(ps2_data) & HT &
          "clk:  " & to_string(ps2_clk));
     wait_clk(2, clk);
@@ -43,7 +47,7 @@ begin
   (
     clk      => clk,
     rst_n    => rst_n,
-    tdata    => "01100110",
+    tdata    => tdata_k,
     tvalid   => tvalid,
     tready   => tready,
     ps2_clk  => ps2_clk,
@@ -53,7 +57,7 @@ begin
   process
   is
     variable counter : integer := 0;
-    constant COUNTER_LIMIT : integer := 100;
+    constant COUNTER_LIMIT : integer := 200;
   begin
     if (counter >= COUNTER_LIMIT) then
       finish("Timeout...");
@@ -74,9 +78,25 @@ begin
 
     wait until tready = '1' for 1 us;
     tvalid <= '1';
-    wait_clk(1, clk);
+    wait_clk(3, clk);
 
-    for i in 0 to 20 loop
+    for i in 0 to 12 loop
+      tb_bit := i;
+
+      if i = 0 then
+        -- start
+        assert ps2_data = '0';
+      elsif (i >= 1) and (i < 9) then
+        -- data
+        assert ps2_data = tdata_k(i-1);
+      elsif (i = 9) then
+        -- parity
+        assert ps2_data = (xor tdata_k);
+      else
+        -- stop
+        assert ps2_data = '1';
+      end if;
+
       print_wait;
     end loop;
     finish;
