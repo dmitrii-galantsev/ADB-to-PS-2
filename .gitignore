@@ -1,5 +1,7 @@
 # VHDL Products
 *.cf
+*.vcd
 
 # Misc
 tags
+.DS_STORE
